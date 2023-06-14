@@ -1,0 +1,23 @@
+This is my input.
+\alpha\beta\pi
+
+  - | Type      | char                     | int int32 | long int int64 | long long |
+    |:---------:|:------------------------:|:---------:|:--------------:|:---------:|
+    | **Bytes** | 1                        | 4         | 8              | 16        |
+    | **Type**  | **pointer (x64 system)** | **short** |                |           |
+    | **Bytes** | 8                        | 2         |                |           |
+
+| Type      | char                     | int int32 | long int int64 | long long |
+|:---------:|:------------------------:|:---------:|:--------------:|:---------:|
+| **Bytes** | 1                        | 4         | 8              | 16        |
+| **Type**  | **pointer (x64 system)** | **short** |                |           |
+| **Bytes** | 8                        | 2         |                |           |
+
+   ```python
+code blocked text xx*YY*! \alpha --> \omega
+```
+\alpha --> \omega
+$$
+math text xx*YY*! \alpha-hat!
+$$
+asdf
