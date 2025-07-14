@@ -1,7 +1,6 @@
 import os; import sys; import io
 import string
 import re
-from project3 import *
 from re import Match, sub
 from main import characters, simple, mathematical, complicated
 from functools import partial
@@ -11,9 +10,10 @@ configuration = {}
 def matchStr(match):
     return " | ".join(match.groups())
 
-def wrap(start, string, end = None, spacing = 0):
+def wrap(start, input_str, end = None, spacing = 0):
     if not end: end = start
-    return f"{start}{' '*spacing}{string}{' '*spacing}{end}"
+    return f"{start}{' '*spacing}{input_str}{' ' * spacing}{end}"
+
 
 class Lines:
     def __init__(self, lines, blocks = []):
@@ -23,11 +23,12 @@ class Lines:
 
     def __iter__(self):
         return self
+
     def __next__(self):
-        try: toReturn = self.lines[self.index]
+        try: to_return = self.lines[self.index]
         except: raise(StopIteration)
         self.index += 1
-        return toReturn
+        return to_return
 
     def lookahead(self, n):
         if self.index >= len(self.lines): return None
@@ -35,43 +36,44 @@ class Lines:
     def __str__(self):
         return str(self.lines[:self.index], self.lines[self.index:])
     def __repr__(self):
-        toReturn = self.__str__() + '\n'
-        toReturn += f"index = {self.index}"
-        return toReturn
+        to_return = self.__str__() + '\n'
+        to_return += f"index = {self.index}"
+        return to_return
+
 
 class Block:
-    def unformatted(self, string, wrap = None):
-        if wrap: return str(wrap) + string + str(wrap)
-        return string
+    def unformatted(self, input_str, wrap = None):
+        if wrap: return str(wrap) + input_str + str(wrap)
+        return input_str
 
-    def mathematical(self, string, wrap = None):
+    def mathematical(self, input_str, wrap = None):
         if not wrap: wrap = ""
         for key, symbol in simple.items():
-            string = string.replace(key, symbol)
+            input_str = input_str.replace(key, symbol)
 
         for key, char in characters.items():
             if key in ["sum"]: continue;
-            string = string.replace("\\" + key, char)
+            input_str = input_str.replace("\\" + key, char)
 
         for key, item in mathematical.items():
-            string = re.sub(key, str(wrap) + item + str(wrap), string)
+            input_str = re.sub(key, str(wrap) + item + str(wrap), input_str)
 
-        return string
+        return input_str
 
-    def formatted(self, string):
+    def formatted(self, input_str):
         for key, symbol in simple.items():
-            string = string.replace(key, symbol)
+            input_str = input_str.replace(key, symbol)
         for key, char in characters.items():
-            string = string.replace("\\" + key, char)
+            input_str = input_str.replace("\\" + key, char)
         if configuration['complex']:
             for key, symbol in complicated.items():
-                string = string.replace(key, symbol)
+                input_str = input_str.replace(key, symbol)
 
         ## TODO: attempt inline splitting(?)
 
-        return string
+        return input_str
 
-    def graphing(self, string):
+    def graphing(self, input_str):
 
         """ Non-functional Requirements
         make sure that nested brackets are ignored
@@ -104,7 +106,9 @@ class Block:
         split each line along "---" or "-->" or smth:
             "A-->B" -> "id1-->id2 %%{A-->B}%%"
         """
-        return string
+        return input_str
+
+
     def getfuncs(self):
         return {
             'code': self.unformatted,
@@ -116,9 +120,9 @@ class Block:
     def __str__(self):
         return self.handler.__name__
     def __repr__(self):
-        toReturn = f"start = [{self.start}]\tstop = [{self.stop}]\n"
-        toReturn += f"handler = {self.handler.__name__}"
-        return toReturn
+        to_return = f"start = [{self.start}]\tstop = [{self.stop}]\n"
+        to_return += f"handler = {self.handler.__name__}"
+        return to_return
 
     def __init__(self, start, stop, handler):
         self.start = re.compile(start)
@@ -137,82 +141,82 @@ class Node:
 
 def clean(text):
     text = text.replace("ウ", "\\")
-    myList = [m.start() for m in re.finditer("\$\$", text)]
-    toRemove = []
-    for item in myList:
+    my_list = [m.start() for m in re.finditer("\$\$", text)]
+    to_remove = []
+    for item in my_list:
         if text[item + 2] != '\n':
-            toRemove.append(item)
-    if len(toRemove) == 0:
-        toReturn = text
+            to_remove.append(item)
+    if len(to_remove) == 0:
+        to_return = text
     else:
-        toReturn = ""
-        if len(toRemove) == 1:
-            return text[0:toRemove[0]] + text[toRemove[0]+2:]
-        for i in range(len(toRemove)):
+        to_return = ""
+        if len(to_remove) == 1:
+            return text[0:to_remove[0]] + text[to_remove[0]+2:]
+        for i in range(len(to_remove)):
             if i == 0:
-                toReturn += text[:toRemove[i]];
+                to_return += text[:to_remove[i]];
                 continue
-            toReturn += text[toRemove[i-1] +2: toRemove[i]]
-        toReturn += text[toRemove[-1]+2:]
+            to_return += text[to_remove[i-1] +2: to_remove[i]]
+        to_return += text[to_remove[-1]+2:]
 
-    if toReturn[0] == '~' and toReturn[1] == '$':
-        toReturn = toReturn[1:]
-    if toReturn[-1] == '~' and toReturn[-2] == '$':
-        toReturn = toReturn[:-1]
-    return toReturn
+    if to_return[0] == '~' and to_return[1] == '$':
+        to_return = to_return[1:]
+    if to_return[-1] == '~' and to_return[-2] == '$':
+        to_return = to_return[:-1]
+    return to_return
 
 
 
 
 def identical(f, g): # TODO: replace with {whether the file has changed}
-    filePos = (f.tell(), g.tell())
+    file_pos = (f.tell(), g.tell())
     f.seek(0,0); g.seek(0,0)
-    toReturn = (f.read()) == (g.read())
-    f.seek(filePos[0]); g.seek(filePos[1])
-    return toReturn
+    to_return = (f.read()) == (g.read())
+    f.seek(file_pos[0]); g.seek(file_pos[1])
+    return to_return
 
 
 def charToLine(file, char): # IIRC: given a character count from checkFreq, returns the line number
-    filePos = file.tell()
+    file_pos = file.tell()
     file.seek(0,0)
-    toReturn = 0
+    to_return = 0
     index = 0; i = 0
     while(1):
         if i == char:break
 
-        charIn = file.read(1)
-        while(charIn == ' '):
-            charIn = file.read(1)
+        char_in = file.read(1)
+        while(char_in == ' '):
+            char_in = file.read(1)
 
-        if charIn == '\n': toReturn += 1; index = -1;
+        if char_in == '\n': to_return += 1; index = -1;
         index += 1
         i += 1
-    file.seek(filePos, 0)
-    return (toReturn, index)
+    file.seek(file_pos, 0)
+    return (to_return, index)
 
 def checkFreq(file, matches = ['`', '\\'], threshold = 6, span = 7, debug: bool = False):
-    filePos = file.tell()
+    file_pos = file.tell()
     file.seek(0, 0)
-    string = [' ']*span
+    input_str = [' ']*span
     i = 0
     while(1):
         char = file.read(1)
         if (char == ' '): continue
         if not char: break
-        else: string[i%span] = char
+        else: input_str[i%span] = char
         i += 1
         for match in matches:
-            if ( sum(char == match for char in string)>= threshold ):
+            if ( sum(char == match for char in input_str)>= threshold ):
                 return (match, i)
-    # print(string)
+    # print(input_str)
     # for match in matches:
     #     print(f"number of {{{match}}}: {sum( (item == match) for item in string)}")
 
-    file.seek(filePos, 0)
+    file.seek(file_pos, 0)
     return False
 
 
-def findNreplace(input: string, config_input) -> None:
+def findNreplace(input: str, config_input) -> None:
     global configuration; configuration = config_input
     # print("findNreplace: configuration = ", configuration)
     debug = configuration['debug']
@@ -245,10 +249,10 @@ def findNreplace(input: string, config_input) -> None:
                     return
                 break
         line = line.split('`');
-        lineItems = line.__iter__()
-        for item in lineItems: # distinguish between items within and outside of the set
+        line_items = line.__iter__()
+        for item in line_items: # distinguish between items within and outside of the set
             g.write(replacer(item))
-            try: item = lineItems.__next__(); # .__next__() returns an exception for ends
+            try: item = line_items.__next__(); # .__next__() returns an exception for ends
             except: break;
             g.write(f"`{item}`")
     # freq = checkFreq(g)
